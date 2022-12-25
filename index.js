@@ -10,6 +10,9 @@ const cors = require('cors')
 const app = express()
 
 app.use(cors())
+//++++++++++++++++++++++++++++++
+app.use(express.static('build'))
+//++++++++++++++++++++++++++++++
 
 //find out the largest id number in the current list and assign it to the maxId variable.
 const generatedId = () =>{
