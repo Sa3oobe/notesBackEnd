@@ -6,6 +6,7 @@
 const { response, request } = require('express')
 const express = require('express')
 const cors = require('cors')
+const mongoose = require('mongoose')
 
 const app = express()
 
@@ -13,6 +14,20 @@ app.use(cors())
 //++++++++++++++++++++++++++++++
 app.use(express.static('build'))
 //++++++++++++++++++++++++++++++
+//+++mongoos
+// DO NOT SAVE YOUR PASSWORD TO GITHUB!!
+const url =
+  `mongodb+srv://sab2:sab2123@cluster1.jybvkhn.mongodb.net/test`
+
+mongoose.connect(url)
+
+const noteSchema = new mongoose.Schema({
+  content: String,
+  date: Date,
+  important: Boolean,
+})
+
+const Note = mongoose.model('Note', noteSchema)
 
 //find out the largest id number in the current list and assign it to the maxId variable.
 const generatedId = () =>{
@@ -51,14 +66,23 @@ let notes = [
     response.end(JSON.stringify(notes))
 }) */
 
-// GET request to Root
+//  ============ GET request to Root
 app.get('/', (request, response) => {
     response.send('<h1>Hello World!!!</h1>')
 })
 
-// Get request to api/notes
+// ============== Get request to api/notes ==================================
 app.get('/api/notes' , (request, response) => {
-    response.json(notes)
+    console.log('====================================');
+    console.log('Fuuuuck');
+    console.log('====================================');
+    console.log(typeof(Note))
+    Note.find({}).then(notes => {
+        response.json(notes)
+    })
+    // the problem in response== to be continue
+    //response.json(notes)
+    /* console.log(response.json(notes)); */
 })
 
 // ============== GET request for a single resource ============================
@@ -80,13 +104,18 @@ app.get('/api/notes/:id', (request, response) => {
 })
 
 // ============= DELETE request for deleting a single resource ===============
-app.delete('/api/notes/:id', (request, response) => {
-    const id = Number(request.params.id)
+app.delete('/api/notes/:id', (request, response, next) => {
+    /* const id = Number(request.params.id)
     notes = notes.filter(note => note.id !== id)
 
-    response.status(204).end()
+    response.status(204).end() */
+    Note.findByIdAndRemove(request.params.id)
+        .then(result => {
+            response.status(204).end()
+        })
+        .catch(error => next(error))
 })
-
+app.use(requestLogger) // this line copied from 154 axxourding to (the order of middleware loading from FullStackopen site) need more debugging
 //============== POST request for a single resource ============================
 app.post('/api/notes/', (request, response) => {
     //Without the json-parser, the body property would be undefined. That is way we need it
@@ -122,7 +151,7 @@ const requestLogger = (request, response, next) => {
     console.log('---')
     next()
   }
-app.use(requestLogger)
+//app.use(requestLogger)
 
 //================= catching requests made to non-existent routes ==============
 const unknownEndpoint = (request, response) => {
